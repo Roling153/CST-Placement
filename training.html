@@ -42,8 +42,8 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>Training & Placement Dashboard</h1>
-            <p>Team B - Command Center for Project Management</p>
+            <h1>Training Dashboard</h1>
+            <p>CST Management System</p>
         </div>
 
         <!-- Dashboard Content -->
@@ -110,7 +110,7 @@
                 <table class="projects-table">
                     <thead>
                         <tr>
-                            <th>Project ID</th>
+                            <th>CST ID</th>
                             <th>Company</th>
                             <th>Role</th>
                             <th>CTC</th>
@@ -158,7 +158,7 @@
 
                     <!-- Team B Internal Tracking Section (Editable) -->
                     <div class="section team-b-form">
-                        <h3>🎯 Team B Internal Tracking</h3>
+                        <h3>🎯 Internal Tracking</h3>
                         <button class="edit-btn" id="editBtn" onclick="toggleEdit()">✏️ Edit</button>
                         <button class="save-btn" id="saveBtn" onclick="saveTeamBData()" style="display: none;">💾 Save</button>
                         
@@ -209,9 +209,9 @@
                             </div>
 
                             <!-- Program Scope -->
-                            <h4>🎯 Program Scope</h4>
+                            <h4>🎯 Training Scope</h4>
                             <div class="form-group">
-                                <label>Program Focus</label>
+                                <label>Details</label>
                                 <div class="checkbox-group">
                                     <div class="checkbox-item">
                                         <input type="checkbox" id="focusTraining" name="programFocus" value="training" disabled>
@@ -233,10 +233,10 @@
                             </div>
 
                             <!-- Student Placement Funnel -->
-                            <h4>👥 Student Placement Funnel</h4>
+                            <h4>👥 Student Training & Placement Details</h4>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="shortlistedStudents">Company Shortlisted Students (Initial)</label>
+                                    <label for="shortlistedStudents">Shortlisted Students (Initial)</label>
                                     <input type="number" id="shortlistedStudents" disabled>
                                 </div>
                                 <div class="form-group">
@@ -745,4 +745,5 @@
     </script>
 </body>
 </html>
+
 
