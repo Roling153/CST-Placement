@@ -804,6 +804,16 @@ body {
     background: #2980b9;
 }
 
+.file-link:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.file-link:disabled:hover {
+    background: #95a5a6;
+}
+
 .team-b-form {
     background: white;
     border: 2px solid #e74c3c;
