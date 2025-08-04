@@ -183,21 +183,38 @@
                         </div>
                     </div>
 
-                    <!-- File Upload Section -->
+                    <!-- Google Drive Links Section -->
                     <div class="file-upload-section">
-                        <h3>📁 Document Uploads</h3>
+                        <h3>📁 Google Drive File Links</h3>
+                        <p style="color: #666; margin-bottom: 20px; text-align: center;">
+                            Upload your files to Google Drive and paste the sharing links below
+                        </p>
                         <div class="file-upload-grid">
                             <div class="file-upload-item">
                                 <h4>Job Description</h4>
-                                <p>Upload the official JD from company</p>
-                                <p><strong>Accepted formats:</strong> PDF, PPT, PPTX</p>
-                                <input type="file" id="job-description" accept=".pdf,.ppt,.pptx">
+                                <p>Upload JD to Google Drive and paste the sharing link</p>
+                                <p><strong>Steps:</strong></p>
+                                <ol style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                                    <li>Upload JD file to Google Drive</li>
+                                    <li>Right-click file → "Share"</li>
+                                    <li>Set to "Anyone with link can view"</li>
+                                    <li>Copy the link and paste below</li>
+                                </ol>
+                                <input type="url" id="jd-google-drive-link" placeholder="https://drive.google.com/file/d/..." style="width: 100%; margin-top: 10px;">
+                                <small style="color: #666; display: block; margin-top: 5px;">Example: https://drive.google.com/file/d/1ABC123.../view</small>
                             </div>
                             <div class="file-upload-item">
-                                <h4>Eligible Students Database</h4>
-                                <p>Excel file with student details</p>
-                                <p><strong>Accepted formats:</strong> XLS, XLSX</p>
-                                <input type="file" id="student-database" accept=".xls,.xlsx">
+                                <h4>Student Database</h4>
+                                <p>Upload database to Google Drive and paste the sharing link</p>
+                                <p><strong>Steps:</strong></p>
+                                <ol style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                                    <li>Upload Excel file to Google Drive</li>
+                                    <li>Right-click file → "Share"</li>
+                                    <li>Set to "Anyone with link can view"</li>
+                                    <li>Copy the link and paste below</li>
+                                </ol>
+                                <input type="url" id="db-google-drive-link" placeholder="https://drive.google.com/file/d/..." style="width: 100%; margin-top: 10px;">
+                                <small style="color: #666; display: block; margin-top: 5px;">Example: https://drive.google.com/file/d/1XYZ789.../view</small>
                             </div>
                         </div>
                     </div>
@@ -351,22 +368,24 @@
                         </div>
                     </div>
 
-                    <!-- File Re-upload Section -->
+                    <!-- Google Drive Links Update Section -->
                     <div class="file-upload-section">
-                        <h3>📁 Update Documents (Optional)</h3>
-                        <p style="color: #666; margin-bottom: 20px;">Upload new files only if you need to replace existing documents</p>
+                        <h3>📁 Update Google Drive Links (Optional)</h3>
+                        <p style="color: #666; margin-bottom: 20px;">Update Google Drive links only if you need to replace existing files</p>
                         <div class="file-upload-grid">
                             <div class="file-upload-item">
                                 <h4>Job Description</h4>
-                                <p>Current: <strong>JD_TechCorp_FullStack.pdf</strong></p>
-                                <p><strong>Upload new:</strong> PDF, PPT, PPTX</p>
-                                <input type="file" id="update-job-description" accept=".pdf,.ppt,.pptx">
+                                <p>Current: <strong id="current-jd-link">Not available</strong></p>
+                                <p><strong>New Google Drive Link:</strong></p>
+                                <input type="url" id="update-jd-google-drive-link" placeholder="https://drive.google.com/file/d/..." style="width: 100%; margin-top: 10px;">
+                                <small style="color: #666; display: block; margin-top: 5px;">Leave empty to keep current link</small>
                             </div>
                             <div class="file-upload-item">
-                                <h4>Eligible Students Database</h4>
-                                <p>Current: <strong>Students_TechCorp_Aug2025.xlsx</strong></p>
-                                <p><strong>Upload new:</strong> XLS, XLSX</p>
-                                <input type="file" id="update-student-database" accept=".xls,.xlsx">
+                                <h4>Student Database</h4>
+                                <p>Current: <strong id="current-db-link">Not available</strong></p>
+                                <p><strong>New Google Drive Link:</strong></p>
+                                <input type="url" id="update-db-google-drive-link" placeholder="https://drive.google.com/file/d/..." style="width: 100%; margin-top: 10px;">
+                                <small style="color: #666; display: block; margin-top: 5px;">Leave empty to keep current link</small>
                             </div>
                         </div>
                     </div>
@@ -481,6 +500,14 @@
             document.getElementById('update-final-database-date').value = project.finalDatabaseDate || '';
             document.getElementById('update-whatsapp-link').value = project.whatsappLink || '';
             
+            // Populate Google Drive links
+            document.getElementById('update-jd-google-drive-link').value = project.jobDescriptionDriveLink || '';
+            document.getElementById('update-db-google-drive-link').value = project.studentDatabaseDriveLink || '';
+            
+            // Show current links
+            document.getElementById('current-jd-link').textContent = project.jobDescriptionDriveLink ? 'Available' : 'Not available';
+            document.getElementById('current-db-link').textContent = project.studentDatabaseDriveLink ? 'Available' : 'Not available';
+            
             // Set radio button
             if (project.trainingRequest) {
                 document.getElementById(`update-training-${project.trainingRequest}`).checked = true;
@@ -489,10 +516,6 @@
 
         async function updateProject() {
             const projectId = document.getElementById('project-id').value;
-            
-            // Get file information for updates
-            const jobDescriptionFile = document.getElementById('update-job-description').files[0];
-            const studentDatabaseFile = document.getElementById('update-student-database').files[0];
             
             // Collect updated data
             const updatedData = {
@@ -516,8 +539,9 @@
                 finalDatabaseDate: document.getElementById('update-final-database-date').value,
                 whatsappLink: document.getElementById('update-whatsapp-link').value,
                 trainingRequest: document.querySelector('input[name="update-training-request"]:checked')?.value,
-                jobDescriptionFile: jobDescriptionFile ? jobDescriptionFile.name : null,
-                studentDatabaseFile: studentDatabaseFile ? studentDatabaseFile.name : null,
+                // Update Google Drive links only if new ones are provided
+                jobDescriptionDriveLink: document.getElementById('update-jd-google-drive-link').value || null,
+                studentDatabaseDriveLink: document.getElementById('update-db-google-drive-link').value || null,
                 lastUpdated: new Date().toISOString(),
                 status: 'updated'
             };
@@ -550,10 +574,6 @@
         }
 
         function collectFormData() {
-            // Get file information
-            const jobDescriptionFile = document.getElementById('job-description').files[0];
-            const studentDatabaseFile = document.getElementById('student-database').files[0];
-            
             return {
                 projectId: generateProjectId(),
                 companyName: document.getElementById('company-name').value,
@@ -575,8 +595,9 @@
                 finalDatabaseDate: document.getElementById('final-database-date').value,
                 whatsappLink: document.getElementById('whatsapp-link').value,
                 trainingRequest: document.querySelector('input[name="training-request"]:checked')?.value,
-                jobDescriptionFile: jobDescriptionFile ? jobDescriptionFile.name : null,
-                studentDatabaseFile: studentDatabaseFile ? studentDatabaseFile.name : null,
+                // Google Drive links
+                jobDescriptionDriveLink: document.getElementById('jd-google-drive-link').value,
+                studentDatabaseDriveLink: document.getElementById('db-google-drive-link').value,
                 createdAt: new Date().toISOString(),
                 status: 'new'
             };
