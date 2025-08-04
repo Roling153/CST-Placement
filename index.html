@@ -490,6 +490,10 @@
         async function updateProject() {
             const projectId = document.getElementById('project-id').value;
             
+            // Get file information for updates
+            const jobDescriptionFile = document.getElementById('update-job-description').files[0];
+            const studentDatabaseFile = document.getElementById('update-student-database').files[0];
+            
             // Collect updated data
             const updatedData = {
                 projectId: projectId,
@@ -512,6 +516,8 @@
                 finalDatabaseDate: document.getElementById('update-final-database-date').value,
                 whatsappLink: document.getElementById('update-whatsapp-link').value,
                 trainingRequest: document.querySelector('input[name="update-training-request"]:checked')?.value,
+                jobDescriptionFile: jobDescriptionFile ? jobDescriptionFile.name : null,
+                studentDatabaseFile: studentDatabaseFile ? studentDatabaseFile.name : null,
                 lastUpdated: new Date().toISOString(),
                 status: 'updated'
             };
@@ -544,6 +550,10 @@
         }
 
         function collectFormData() {
+            // Get file information
+            const jobDescriptionFile = document.getElementById('job-description').files[0];
+            const studentDatabaseFile = document.getElementById('student-database').files[0];
+            
             return {
                 projectId: generateProjectId(),
                 companyName: document.getElementById('company-name').value,
@@ -565,6 +575,8 @@
                 finalDatabaseDate: document.getElementById('final-database-date').value,
                 whatsappLink: document.getElementById('whatsapp-link').value,
                 trainingRequest: document.querySelector('input[name="training-request"]:checked')?.value,
+                jobDescriptionFile: jobDescriptionFile ? jobDescriptionFile.name : null,
+                studentDatabaseFile: studentDatabaseFile ? studentDatabaseFile.name : null,
                 createdAt: new Date().toISOString(),
                 status: 'new'
             };
