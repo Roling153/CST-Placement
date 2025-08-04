@@ -8,10 +8,9 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     
-    <!-- Google Drive API -->
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client"></script>
+
 
     <script>
     // Firebase configuration
@@ -28,6 +27,7 @@
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const storage = firebase.storage();
 
     // Test Firebase connection
     db.collection('test').add({
@@ -39,63 +39,46 @@
         console.error('❌ Firebase connection failed:', error);
     });
 
-    // Google Drive Configuration
-    const GOOGLE_DRIVE_CONFIG = {
-        apiKey: 'AIzaSyD64E4_bL3iQRvvzCmcMRg60jo4_dnY4cQ',
-        clientId: '1066525595980-7f1f1af20c16105eb96941fc9150fc23549a66e3.apps.googleusercontent.com',
-        scope: 'https://www.googleapis.com/auth/drive.file'
-    };
-
-    // Initialize Google Drive API
-    function initGoogleDrive() {
-        gapi.load('client:auth2', function() {
-            gapi.client.init({
-                apiKey: GOOGLE_DRIVE_CONFIG.apiKey,
-                clientId: GOOGLE_DRIVE_CONFIG.clientId,
-                scope: GOOGLE_DRIVE_CONFIG.scope
-            }).then(function() {
-                console.log('✅ Google Drive API initialized');
-            }).catch(function(error) {
-                console.error('❌ Google Drive API error:', error);
-            });
-        });
+    // Simple file storage using Firebase Storage (no authentication required)
+    function initFileStorage() {
+        console.log('✅ File storage initialized');
     }
 
-    // Upload file to Google Drive
-    async function uploadFileToDrive(file, projectId, fileType) {
+    // Upload file using Firebase Storage
+    async function uploadFileToStorage(file, projectId, fileType) {
         try {
-            // Authenticate user
-            const authResult = await gapi.auth2.getAuthInstance().signIn();
+            // Create a unique filename
+            const timestamp = Date.now();
+            const fileName = `${fileType}_${projectId}_${timestamp}_${file.name}`;
             
-            // Create file metadata
-            const metadata = {
-                name: `${fileType}_${projectId}_${file.name}`,
-                parents: ['1QrCL8CFd9ysANELN6fBFtZjBYfnqsyze'], // Replace with your folder ID
-                mimeType: file.type
+            // Create a reference to the file location
+            const storageRef = storage.ref();
+            const fileRef = storageRef.child(`cst-portal/${fileName}`);
+            
+            // Upload the file
+            const snapshot = await fileRef.put(file);
+            
+            // Get the download URL
+            const downloadURL = await snapshot.ref.getDownloadURL();
+            
+            // Store file info in Firebase
+            const fileInfo = {
+                name: fileName,
+                size: file.size,
+                type: file.type,
+                uploadedAt: new Date().toISOString(),
+                projectId: projectId,
+                fileType: fileType,
+                downloadURL: downloadURL
             };
-
-            // Upload file
-            const form = new FormData();
-            form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
-            form.append('file', file);
-
-            const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authResult.getAuthResponse().access_token}`
-                },
-                body: form
-            });
-
-            const result = await response.json();
             
-            // Make file publicly accessible
-            await makeFilePublic(result.id);
+            await db.collection('files').doc(fileName).set(fileInfo);
             
             return {
-                fileId: result.id,
-                downloadUrl: `https://drive.google.com/uc?id=${result.id}`,
-                viewUrl: `https://drive.google.com/file/d/${result.id}/view`
+                fileId: fileName,
+                downloadUrl: downloadURL,
+                viewUrl: downloadURL,
+                fileName: fileName
             };
         } catch (error) {
             console.error('❌ Upload error:', error);
@@ -103,26 +86,9 @@
         }
     }
 
-    // Make file publicly accessible
-    async function makeFilePublic(fileId) {
-        const authResult = await gapi.auth2.getAuthInstance().signIn();
-        
-        await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${authResult.getAuthResponse().access_token}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                role: 'reader',
-                type: 'anyone'
-            })
-        });
-    }
-
-    // Initialize Google Drive on page load
+    // Initialize file storage on page load
     document.addEventListener('DOMContentLoaded', function() {
-        initGoogleDrive();
+        initFileStorage();
     });
     </script>
 
@@ -602,17 +568,17 @@
             let jdUploadResult = null;
             let dbUploadResult = null;
             
-            // Upload new files to Google Drive if provided
+            // Upload new files to storage if provided
             try {
                 if (jobDescriptionFile) {
-                    document.getElementById('update-jd-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading new JD to Google Drive...</div>';
-                    jdUploadResult = await uploadFileToDrive(jobDescriptionFile, projectId, 'JD');
+                    document.getElementById('update-jd-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading new JD file...</div>';
+                    jdUploadResult = await uploadFileToStorage(jobDescriptionFile, projectId, 'JD');
                     document.getElementById('update-jd-upload-status').innerHTML = '<div class="upload-status success">✅ New JD uploaded successfully!</div>';
                 }
                 
                 if (studentDatabaseFile) {
-                    document.getElementById('update-db-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading new database to Google Drive...</div>';
-                    dbUploadResult = await uploadFileToDrive(studentDatabaseFile, projectId, 'DB');
+                    document.getElementById('update-db-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading new database file...</div>';
+                    dbUploadResult = await uploadFileToStorage(studentDatabaseFile, projectId, 'DB');
                     document.getElementById('update-db-upload-status').innerHTML = '<div class="upload-status success">✅ New database uploaded successfully!</div>';
                 }
             } catch (error) {
@@ -729,17 +695,17 @@
             let jdUploadResult = null;
             let dbUploadResult = null;
             
-            // Upload files to Google Drive
+            // Upload files to storage
             try {
                 if (jobDescriptionFile) {
-                    document.getElementById('jd-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading JD to Google Drive...</div>';
-                    jdUploadResult = await uploadFileToDrive(jobDescriptionFile, projectId, 'JD');
+                    document.getElementById('jd-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading JD file...</div>';
+                    jdUploadResult = await uploadFileToStorage(jobDescriptionFile, projectId, 'JD');
                     document.getElementById('jd-upload-status').innerHTML = '<div class="upload-status success">✅ JD uploaded successfully!</div>';
                 }
                 
                 if (studentDatabaseFile) {
-                    document.getElementById('db-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading database to Google Drive...</div>';
-                    dbUploadResult = await uploadFileToDrive(studentDatabaseFile, projectId, 'DB');
+                    document.getElementById('db-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading database file...</div>';
+                    dbUploadResult = await uploadFileToStorage(studentDatabaseFile, projectId, 'DB');
                     document.getElementById('db-upload-status').innerHTML = '<div class="upload-status success">✅ Database uploaded successfully!</div>';
                 }
             } catch (error) {
@@ -762,15 +728,15 @@
             const success = await saveProjectToFirebase(projectData);
             
             if (success) {
-                // Display success message
-                document.getElementById('generatedProjectId').textContent = projectData.projectId;
-                document.getElementById('projectIdDisplay').style.display = 'block';
-                
-                // Scroll to success message
-                document.getElementById('projectIdDisplay').scrollIntoView({behavior: 'smooth'});
-                
-                // Reset form
-                this.reset();
+            // Display success message
+            document.getElementById('generatedProjectId').textContent = projectData.projectId;
+            document.getElementById('projectIdDisplay').style.display = 'block';
+            
+            // Scroll to success message
+            document.getElementById('projectIdDisplay').scrollIntoView({behavior: 'smooth'});
+            
+            // Reset form
+            this.reset();
                 
                 // Clear upload status
                 document.getElementById('jd-upload-status').innerHTML = '';
