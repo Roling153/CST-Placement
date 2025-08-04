@@ -638,15 +638,8 @@
         // File handling functions
         function viewJD(projectId) {
             const project = projects.find(p => p.projectId === projectId);
-            if (project && project.jobDescriptionFile) {
-                // Create a temporary link to download/view the file
-                const link = document.createElement('a');
-                link.href = project.jobDescriptionFile;
-                link.target = '_blank';
-                link.download = `JD_${project.companyName}_${project.projectId}.pdf`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+            if (project && project.jobDescriptionDriveLink) {
+                window.open(project.jobDescriptionDriveLink, '_blank');
             } else {
                 alert('⚠️ Job Description file not available for this project.');
             }
@@ -654,14 +647,10 @@
 
         function downloadDatabase(projectId) {
             const project = projects.find(p => p.projectId === projectId);
-            if (project && project.studentDatabaseFile) {
-                // Create a temporary link to download the file
-                const link = document.createElement('a');
-                link.href = project.studentDatabaseFile;
-                link.download = `Students_${project.companyName}_${project.projectId}.xlsx`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+            if (project && project.studentDatabaseDriveLink) {
+                // Convert Google Drive link to download link
+                const downloadLink = project.studentDatabaseDriveLink.replace('/view', '/preview');
+                window.open(downloadLink, '_blank');
             } else {
                 alert('⚠️ Student Database file not available for this project.');
             }
@@ -729,11 +718,11 @@
                     <span>${project.jobDescriptionText || 'N/A'}</span>
                 </div>
                 <div class="file-links">
-                    <button class="file-link" onclick="viewJD('${project.projectId}')" ${!project.jobDescriptionFile ? 'disabled' : ''}>
-                        📄 View JD ${!project.jobDescriptionFile ? '(Not Available)' : ''}
+                    <button class="file-link" onclick="viewJD('${project.projectId}')" ${!project.jobDescriptionDriveLink ? 'disabled' : ''}>
+                        📄 View JD ${!project.jobDescriptionDriveLink ? '(Not Available)' : ''}
                     </button>
-                    <button class="file-link" onclick="downloadDatabase('${project.projectId}')" ${!project.studentDatabaseFile ? 'disabled' : ''}>
-                        📊 Download Student Database ${!project.studentDatabaseFile ? '(Not Available)' : ''}
+                    <button class="file-link" onclick="downloadDatabase('${project.projectId}')" ${!project.studentDatabaseDriveLink ? 'disabled' : ''}>
+                        📊 Download Student Database ${!project.studentDatabaseDriveLink ? '(Not Available)' : ''}
                     </button>
                 </div>
             `;
