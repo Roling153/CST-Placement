@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CST Portal - Team B Dashboard</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyD64E4_bL3iQRvvzCmcMRg60jo4_dnY4cQ",
+        authDomain: "cst-portal-db.firebaseapp.com",
+        projectId: "cst-portal-db",
+        storageBucket: "cst-portal-db.firebasestorage.app",
+        messagingSenderId: "1066525595980",
+        appId: "1:1066525595980:web:7e574f1bd9524310b197e9",
+        measurementId: "G-H78G7HJR28"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Test Firebase connection
+    db.collection('test').add({
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        message: 'Firebase connected successfully!'
+    }).then(() => {
+        console.log('✅ Firebase connected successfully!');
+    }).catch((error) => {
+        console.error('❌ Firebase connection failed:', error);
+    });
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard-content {
+            padding: 30px;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .filters-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .projects-table-container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-header {
+            background: #34495e;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+        }
+
+        .refresh-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #2980b9;
+        }
+
+        .projects-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .projects-table th {
+            background: #ecf0f1;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #bdc3c7;
+        }
+
+        .projects-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #ecf0f1;
+            vertical-align: middle;
+        }
+
+        .projects-table tr:hover {
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-align: center;
+            display: inline-block;
+            min-width: 80px;
+        }
+
+        .status-new {
+            background: #e74c3c;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .status-updated {
+            background: #f39c12;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .status-due-confirmed {
+            background: #e67e22;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .status-due-tentative {
+            background: #f1c40f;
+            color: #2c3e50;
+            animation: pulse 2s infinite;
+        }
+
+        .status-in-progress {
+            background: #3498db;
+            color: white;
+        }
+
+        .status-completed {
+            background: #27ae60;
+            color: white;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-view {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #2980b9;
+        }
+
+        .btn-mark-read {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-mark-read:hover {
+            background: #219a52;
+        }
+
+        .company-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .project-id {
+            font-family: monospace;
+            background: #ecf0f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+
+        .drive-mode {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .mode-virtual {
+            background: #e8f5e8;
+            color: #27ae60;
+        }
+
+        .mode-physical {
+            background: #fef9e7;
+            color: #f39c12;
+        }
+
+        .ctc-amount {
+            font-weight: 600;
+            color: #27ae60;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .pagination button:hover {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .pagination button.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quick-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .fab {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: none;
+            background: #e74c3c;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .fab.secondary {
+            background: #95a5a6;
+            width: 48px;
+            height: 48px;
+            font-size: 1rem;
+        }
+
+        /* Project Detail Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 20px auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+        }
+
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .project-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+        }
+
+        .section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-item label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .info-item span {
+            color: #2c3e50;
+            font-size: 0.95rem;
+        }
+
+        .file-links {
+            margin-top: 15px;
+        }
+
+        .file-link {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin: 5px 5px 5px 0;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+
+        .file-link:hover {
+            background: #2980b9;
+        }
+
+        .team-b-form {
+            background: white;
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            padding: 25px;
+        }
+
+        .team-b-form h3 {
+            color: #e74c3c;
+            border-bottom-color: #e74c3c;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .edit-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .edit-btn:hover {
+            background: #c0392b;
+        }
+
+        .save-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .save-btn:hover {
+            background: #219a52;
+        }
+
+        .history-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+
+        .history-btn:hover {
+            background: #7f8c8d;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .projects-table {
+                font-size: 0.8rem;
+            }
+            
+            .projects-table th,
+            .projects-table td {
+                padding: 10px 8px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .project-sections {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Training & Placement Dashboard</h1>
+            <p>Team B - Command Center for Project Management</p>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- Dashboard Stats -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3 id="activeProjects">0</h3>
+                    <p>Active Projects</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="pendingAlerts">0</h3>
+                    <p>Pending Alerts</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="studentsPlaced">0</h3>
+                    <p>Students Placed</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="thisMonth">0</h3>
+                    <p>This Month</p>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label>Status Filter</label>
+                    <select id="statusFilter">
+                        <option value="">All Statuses</option>
+                        <option value="new">New</option>
+                        <option value="updated">Updated</option>
+                        <option value="due-confirmed">Due Today (Confirmed)</option>
+                        <option value="due-tentative">Due Today (Tentative)</option>
+                        <option value="in-progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Company</label>
+                    <input type="text" id="companyFilter" placeholder="Search company name...">
+                </div>
+                <div class="filter-group">
+                    <label>Drive Mode</label>
+                    <select id="modeFilter">
+                        <option value="">All Modes</option>
+                        <option value="virtual">Virtual</option>
+                        <option value="physical">Physical</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <input type="date" id="dateFilter">
+                </div>
+            </div>
+
+            <!-- Projects Table -->
+            <div class="projects-table-container">
+                <div class="table-header">
+                    <h2>Project Overview</h2>
+                    <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+                </div>
+                
+                <table class="projects-table">
+                    <thead>
+                        <tr>
+                            <th>Project ID</th>
+                            <th>Company</th>
+                            <th>Role</th>
+                            <th>CTC</th>
+                            <th>Drive Date</th>
+                            <th>Mode</th>
+                            <th>Status</th>
+                            <th>Students</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectsTableBody">
+                        <!-- Projects will be loaded here dynamically -->
+                    </tbody>
+                </table>
+
+                <!-- Pagination -->
+                <div class="pagination">
+                    <button disabled>← Previous</button>
+                    <button class="active">1</button>
+                    <button>2</button>
+                    <button>3</button>
+                    <button>Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Detail Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Project Details</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="project-sections">
+                    <!-- Team A Data Section (Read-Only) -->
+                    <div class="section">
+                        <h3>📋 Team A Data (Read-Only)</h3>
+                        <div id="teamAData">
+                            <!-- Team A data will be populated here -->
+                        </div>
+                        <button class="history-btn" onclick="viewHistory()">📜 View History</button>
+                    </div>
+
+                    <!-- Team B Internal Tracking Section (Editable) -->
+                    <div class="section team-b-form">
+                        <h3>🎯 Team B Internal Tracking</h3>
+                        <button class="edit-btn" id="editBtn" onclick="toggleEdit()">✏️ Edit</button>
+                        <button class="save-btn" id="saveBtn" onclick="saveTeamBData()" style="display: none;">💾 Save</button>
+                        
+                        <form id="teamBForm">
+                            <!-- Training Logistics -->
+                            <h4>📚 Training Logistics</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="trainingPartner">Training Partner</label>
+                                    <input type="text" id="trainingPartner" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label>Training Type</label>
+                                    <div class="radio-group">
+                                        <div class="radio-item">
+                                            <input type="radio" id="trainingInternal" name="trainingType" value="internal" disabled>
+                                            <label for="trainingInternal">Internal</label>
+                                        </div>
+                                        <div class="radio-item">
+                                            <input type="radio" id="trainingExternal" name="trainingType" value="external" disabled>
+                                            <label for="trainingExternal">External</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Mode of Training</label>
+                                    <div class="radio-group">
+                                        <div class="radio-item">
+                                            <input type="radio" id="trainingOnline" name="trainingMode" value="online" disabled>
+                                            <label for="trainingOnline">Online</label>
+                                        </div>
+                                        <div class="radio-item">
+                                            <input type="radio" id="trainingOffline" name="trainingMode" value="offline" disabled>
+                                            <label for="trainingOffline">Offline</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="trainingDuration">Training Duration (Hours)</label>
+                                    <input type="number" id="trainingDuration" disabled>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="sessionDetails">Session Details</label>
+                                <textarea id="sessionDetails" disabled placeholder="Detailed notes, schedules, trainer info, etc."></textarea>
+                            </div>
+
+                            <!-- Program Scope -->
+                            <h4>🎯 Program Scope</h4>
+                            <div class="form-group">
+                                <label>Program Focus</label>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="focusTraining" name="programFocus" value="training" disabled>
+                                        <label for="focusTraining">Training</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="focusAssessment" name="programFocus" value="assessment" disabled>
+                                        <label for="focusAssessment">Assessment</label>
+                                    </div>
+                                    <div class="checkbox-item">
+                                        <input type="checkbox" id="focusFullCourse" name="programFocus" value="fullCourse" disabled>
+                                        <label for="focusFullCourse">Full Course</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="totalAssessments">Total No. of Assessments</label>
+                                <input type="number" id="totalAssessments" disabled>
+                            </div>
+
+                            <!-- Student Placement Funnel -->
+                            <h4>👥 Student Placement Funnel</h4>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="shortlistedStudents">Company Shortlisted Students (Initial)</label>
+                                    <input type="number" id="shortlistedStudents" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label for="studentsAttendedTraining">No. of Students Attended Training</label>
+                                    <input type="number" id="studentsAttendedTraining" disabled>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="interviewPerformance">Interview Round Performance</label>
+                                <textarea id="interviewPerformance" disabled placeholder="e.g., R1 Shortlist: 45, R2 Shortlist: 20, HR Round: 10"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="finalPlacedStudents">Final No. of Students Placed</label>
+                                <input type="number" id="finalPlacedStudents" disabled>
+                            </div>
+
+                            <!-- Feedback & Review -->
+                            <h4>📝 Feedback & Review</h4>
+                            <div class="form-group">
+                                <label for="studentFeedback">Student Feedback</label>
+                                <textarea id="studentFeedback" disabled placeholder="Qualitative notes or summary"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="recruiterFeedback">Recruiter Feedback</label>
+                                <textarea id="recruiterFeedback" disabled placeholder="Notes from the company/recruiter"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <button class="fab" id="alertCount" title="New Alerts">0</button>
+        <button class="fab secondary" title="Export Data" onclick="exportData()">📊</button>
+        <button class="fab secondary" title="Settings">⚙️</button>
+    </div>
+
+    <script>
+        let currentProject = null;
+        let projects = [];
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProjects();
+            updateDashboardStats();
+            setupFilters();
+        });
+
+        // Firebase functions
+        async function loadProjectsFromFirebase() {
+            try {
+                const snapshot = await db.collection('projects').get();
+                const projects = [];
+                snapshot.forEach(doc => {
+                    projects.push(doc.data());
+                });
+                console.log('✅ Loaded', projects.length, 'projects from Firebase');
+                return projects;
+            } catch (error) {
+                console.error('❌ Error loading from Firebase:', error);
+                return [];
+            }
+        }
+
+        async function updateProjectInFirebase(projectId, updatedData) {
+            try {
+                await db.collection('projects').doc(projectId).update(updatedData);
+                console.log('✅ Project updated in Firebase:', projectId);
+                return true;
+            } catch (error) {
+                console.error('❌ Error updating in Firebase:', error);
+                return false;
+            }
+        }
+
+        async function loadProjects() {
+            projects = await loadProjectsFromFirebase();
+            displayProjects(projects);
+        }
+
+        function displayProjects(projectsToShow) {
+            const tbody = document.getElementById('projectsTableBody');
+            tbody.innerHTML = '';
+
+            projectsToShow.forEach(project => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="project-id">${project.projectId}</span></td>
+                    <td><span class="company-name">${project.companyName || 'N/A'}</span></td>
+                    <td>${project.roleTitle || 'N/A'}</td>
+                    <td><span class="ctc-amount">₹${project.ctc || '0'} LPA</span></td>
+                    <td>${project.driveDate || 'N/A'}</td>
+                    <td><span class="drive-mode mode-${project.driveMode || 'virtual'}">${project.driveMode || 'Virtual'}</span></td>
+                    <td><span class="status-badge status-${project.status || 'new'}">${getStatusText(project.status)}</span></td>
+                    <td>${project.studentsOpted || '0'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-view" onclick="viewProject('${project.projectId}')">View</button>
+                            ${project.status === 'new' || project.status === 'updated' ? 
+                                `<button class="btn btn-mark-read" onclick="markAsRead('${project.projectId}')">Mark Read</button>` : ''}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'new': 'New',
+                'updated': 'Updated',
+                'due-confirmed': 'Due Today',
+                'due-tentative': 'Due Today (T)',
+                'in-progress': 'In Progress',
+                'completed': 'Completed'
+            };
+            return statusMap[status] || 'New';
+        }
+
+        function updateDashboardStats() {
+            const newProjects = projects.filter(p => p.status === 'new').length;
+            const updatedProjects = projects.filter(p => p.status === 'updated').length;
+            const totalPlaced = projects.reduce((sum, p) => sum + (parseInt(p.finalPlacedStudents) || 0), 0);
+            const thisMonth = projects.filter(p => {
+                const projectDate = new Date(p.createdAt);
+                const now = new Date();
+                return projectDate.getMonth() === now.getMonth() && projectDate.getFullYear() === now.getFullYear();
+            }).length;
+
+            document.getElementById('activeProjects').textContent = projects.length;
+            document.getElementById('pendingAlerts').textContent = newProjects + updatedProjects;
+            document.getElementById('studentsPlaced').textContent = totalPlaced;
+            document.getElementById('thisMonth').textContent = thisMonth;
+            document.getElementById('alertCount').textContent = newProjects + updatedProjects;
+        }
+
+        function setupFilters() {
+            document.getElementById('statusFilter').addEventListener('change', filterProjects);
+            document.getElementById('companyFilter').addEventListener('input', filterProjects);
+            document.getElementById('modeFilter').addEventListener('change', filterProjects);
+            document.getElementById('dateFilter').addEventListener('change', filterProjects);
+        }
+
+        function filterProjects() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const companyFilter = document.getElementById('companyFilter').value.toLowerCase();
+            const modeFilter = document.getElementById('modeFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            let filteredProjects = projects;
+
+            if (statusFilter) {
+                filteredProjects = filteredProjects.filter(p => p.status === statusFilter);
+            }
+
+            if (companyFilter) {
+                filteredProjects = filteredProjects.filter(p => 
+                    p.companyName && p.companyName.toLowerCase().includes(companyFilter)
+                );
+            }
+
+            if (modeFilter) {
+                filteredProjects = filteredProjects.filter(p => p.driveMode === modeFilter);
+            }
+
+            if (dateFilter) {
+                filteredProjects = filteredProjects.filter(p => p.driveDate === dateFilter);
+            }
+
+            displayProjects(filteredProjects);
+        }
+
+        async function refreshData() {
+            await loadProjects();
+            updateDashboardStats();
+            alert('✅ Data refreshed successfully!');
+        }
+
+        async function viewProject(projectId) {
+            const project = projects.find(p => p.projectId === projectId);
+            if (project) {
+                currentProject = project;
+                populateModal(project);
+                document.getElementById('projectModal').style.display = 'block';
+            }
+        }
+
+        function populateModal(project) {
+            document.getElementById('modalTitle').textContent = `Project: ${project.projectId}`;
+            
+            // Populate Team A Data
+            const teamAData = document.getElementById('teamAData');
+            teamAData.innerHTML = `
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Company Name</label>
+                        <span>${project.companyName || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Role/Position</label>
+                        <span>${project.roleTitle || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>CTC</label>
+                        <span>₹${project.ctc || '0'} LPA</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Location</label>
+                        <span>${project.location || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Drive Date</label>
+                        <span>${project.driveDate || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Drive Mode</label>
+                        <span>${project.driveMode || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Drive Status</label>
+                        <span>${project.driveStatus || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Contact Person</label>
+                        <span>${project.contactPerson || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Eligible Departments</label>
+                        <span>${project.eligibleDepartments || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Students Opted</label>
+                        <span>${project.studentsOpted || '0'}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <label>Interview Rounds</label>
+                    <span>${project.interviewRounds || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <label>Additional Criteria</label>
+                    <span>${project.additionalCriteria || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <label>Job Description</label>
+                    <span>${project.jobDescriptionText || 'N/A'}</span>
+                </div>
+                <div class="file-links">
+                    <a href="#" class="file-link">📄 View JD</a>
+                    <a href="#" class="file-link">📊 Download Student Database</a>
+                </div>
+            `;
+
+            // Populate Team B Data if exists
+            if (project.teamBData) {
+                populateTeamBForm(project.teamBData);
+            } else {
+                clearTeamBForm();
+            }
+        }
+
+        function populateTeamBForm(teamBData) {
+            document.getElementById('trainingPartner').value = teamBData.trainingPartner || '';
+            document.getElementById('trainingDuration').value = teamBData.trainingDuration || '';
+            document.getElementById('sessionDetails').value = teamBData.sessionDetails || '';
+            document.getElementById('totalAssessments').value = teamBData.totalAssessments || '';
+            document.getElementById('shortlistedStudents').value = teamBData.shortlistedStudents || '';
+            document.getElementById('studentsAttendedTraining').value = teamBData.studentsAttendedTraining || '';
+            document.getElementById('interviewPerformance').value = teamBData.interviewPerformance || '';
+            document.getElementById('finalPlacedStudents').value = teamBData.finalPlacedStudents || '';
+            document.getElementById('studentFeedback').value = teamBData.studentFeedback || '';
+            document.getElementById('recruiterFeedback').value = teamBData.recruiterFeedback || '';
+
+            // Set radio buttons
+            if (teamBData.trainingType) {
+                document.getElementById(`training${teamBData.trainingType.charAt(0).toUpperCase() + teamBData.trainingType.slice(1)}`).checked = true;
+            }
+            if (teamBData.trainingMode) {
+                document.getElementById(`training${teamBData.trainingMode.charAt(0).toUpperCase() + teamBData.trainingMode.slice(1)}`).checked = true;
+            }
+
+            // Set checkboxes
+            if (teamBData.programFocus) {
+                teamBData.programFocus.forEach(focus => {
+                    const checkbox = document.getElementById(`focus${focus.charAt(0).toUpperCase() + focus.slice(1)}`);
+                    if (checkbox) checkbox.checked = true;
+                });
+            }
+        }
+
+        function clearTeamBForm() {
+            document.getElementById('teamBForm').reset();
+        }
+
+        function toggleEdit() {
+            const formElements = document.querySelectorAll('#teamBForm input, #teamBForm select, #teamBForm textarea');
+            const editBtn = document.getElementById('editBtn');
+            const saveBtn = document.getElementById('saveBtn');
+
+            if (editBtn.textContent.includes('Edit')) {
+                // Enable editing
+                formElements.forEach(element => {
+                    element.disabled = false;
+                });
+                editBtn.textContent = '❌ Cancel';
+                saveBtn.style.display = 'inline-block';
+            } else {
+                // Cancel editing
+                formElements.forEach(element => {
+                    element.disabled = true;
+                });
+                editBtn.textContent = '✏️ Edit';
+                saveBtn.style.display = 'none';
+                
+                // Restore original data
+                if (currentProject && currentProject.teamBData) {
+                    populateTeamBForm(currentProject.teamBData);
+                }
+            }
+        }
+
+        async function saveTeamBData() {
+            if (!currentProject) return;
+
+            const teamBData = {
+                trainingPartner: document.getElementById('trainingPartner').value,
+                trainingType: document.querySelector('input[name="trainingType"]:checked')?.value,
+                trainingMode: document.querySelector('input[name="trainingMode"]:checked')?.value,
+                trainingDuration: document.getElementById('trainingDuration').value,
+                sessionDetails: document.getElementById('sessionDetails').value,
+                programFocus: Array.from(document.querySelectorAll('input[name="programFocus"]:checked')).map(cb => cb.value),
+                totalAssessments: document.getElementById('totalAssessments').value,
+                shortlistedStudents: document.getElementById('shortlistedStudents').value,
+                studentsAttendedTraining: document.getElementById('studentsAttendedTraining').value,
+                interviewPerformance: document.getElementById('interviewPerformance').value,
+                finalPlacedStudents: document.getElementById('finalPlacedStudents').value,
+                studentFeedback: document.getElementById('studentFeedback').value,
+                recruiterFeedback: document.getElementById('recruiterFeedback').value,
+                lastUpdated: new Date().toISOString()
+            };
+
+            try {
+                await db.collection('projects').doc(currentProject.projectId).update({
+                    teamBData: teamBData
+                });
+                
+                // Disable form
+                const formElements = document.querySelectorAll('#teamBForm input, #teamBForm select, #teamBForm textarea');
+                formElements.forEach(element => {
+                    element.disabled = true;
+                });
+                
+                document.getElementById('editBtn').textContent = '✏️ Edit';
+                document.getElementById('saveBtn').style.display = 'none';
+                
+                alert('✅ Team B data saved successfully to Firebase!');
+            } catch (error) {
+                console.error('Error saving Team B data:', error);
+                alert('❌ Error saving data. Please try again.');
+            }
+        }
+
+        async function markAsRead(projectId) {
+            try {
+                await db.collection('projects').doc(projectId).update({
+                    status: 'in-progress',
+                    lastUpdated: new Date().toISOString()
+                });
+                await loadProjects();
+                updateDashboardStats();
+            } catch (error) {
+                console.error('Error marking as read:', error);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('projectModal').style.display = 'none';
+            currentProject = null;
+        }
+
+        function viewHistory() {
+            alert('History feature will show all previous versions of this project.');
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(projects, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'cst_projects_data.json';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('projectModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
