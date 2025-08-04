@@ -488,8 +488,8 @@
                     <span>${project.jobDescriptionText || 'N/A'}</span>
                 </div>
                 <div class="file-links">
-                    <a href="#" class="file-link">📄 View JD</a>
-                    <a href="#" class="file-link">📊 Download Student Database</a>
+                    <a href="#" class="file-link" onclick="viewJD('${project.projectId}')">📄 View JD</a>
+                    <a href="#" class="file-link" onclick="downloadDatabase('${project.projectId}')">📊 Download Student Database</a>
                 </div>
             `;
 
@@ -633,6 +633,117 @@
             link.download = 'cst_projects_data.json';
             link.click();
             URL.revokeObjectURL(url);
+        }
+
+        // File handling functions
+        function viewJD(projectId) {
+            const project = projects.find(p => p.projectId === projectId);
+            if (project && project.jobDescriptionFile) {
+                // Create a temporary link to download/view the file
+                const link = document.createElement('a');
+                link.href = project.jobDescriptionFile;
+                link.target = '_blank';
+                link.download = `JD_${project.companyName}_${project.projectId}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                alert('⚠️ Job Description file not available for this project.');
+            }
+        }
+
+        function downloadDatabase(projectId) {
+            const project = projects.find(p => p.projectId === projectId);
+            if (project && project.studentDatabaseFile) {
+                // Create a temporary link to download the file
+                const link = document.createElement('a');
+                link.href = project.studentDatabaseFile;
+                link.download = `Students_${project.companyName}_${project.projectId}.xlsx`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                alert('⚠️ Student Database file not available for this project.');
+            }
+        }
+
+        // Enhanced file links with better error handling
+        function populateModal(project) {
+            document.getElementById('modalTitle').textContent = `Project: ${project.projectId}`;
+            
+            // Populate Team A Data
+            const teamAData = document.getElementById('teamAData');
+            teamAData.innerHTML = `
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Company Name</label>
+                        <span>${project.companyName || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Role/Position</label>
+                        <span>${project.roleTitle || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>CTC</label>
+                        <span>₹${project.ctc || '0'} LPA</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Location</label>
+                        <span>${project.location || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Drive Date</label>
+                        <span>${project.driveDate || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Drive Mode</label>
+                        <span>${project.driveMode || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Drive Status</label>
+                        <span>${project.driveStatus || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Contact Person</label>
+                        <span>${project.contactPerson || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Eligible Departments</label>
+                        <span>${project.eligibleDepartments || 'N/A'}</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Students Opted</label>
+                        <span>${project.studentsOpted || '0'}</span>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <label>Interview Rounds</label>
+                    <span>${project.interviewRounds || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <label>Additional Criteria</label>
+                    <span>${project.additionalCriteria || 'N/A'}</span>
+                </div>
+                <div class="info-item">
+                    <label>Job Description</label>
+                    <span>${project.jobDescriptionText || 'N/A'}</span>
+                </div>
+                <div class="file-links">
+                    <button class="file-link" onclick="viewJD('${project.projectId}')" ${!project.jobDescriptionFile ? 'disabled' : ''}>
+                        📄 View JD ${!project.jobDescriptionFile ? '(Not Available)' : ''}
+                    </button>
+                    <button class="file-link" onclick="downloadDatabase('${project.projectId}')" ${!project.studentDatabaseFile ? 'disabled' : ''}>
+                        📊 Download Student Database ${!project.studentDatabaseFile ? '(Not Available)' : ''}
+                    </button>
+                </div>
+            `;
+
+            // Populate Team B Data if exists
+            if (project.teamBData) {
+                populateTeamBForm(project.teamBData);
+            } else {
+                clearTeamBForm();
+            }
         }
 
         // Close modal when clicking outside
