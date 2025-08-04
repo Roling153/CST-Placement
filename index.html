@@ -446,24 +446,28 @@
                         </div>
                     </div>
 
-                    <!-- Google Drive Links Update Section -->
+                    <!-- Google Drive API Upload Section for Updates -->
                     <div class="file-upload-section">
-                        <h3>📁 Update Google Drive Links (Optional)</h3>
-                        <p style="color: #666; margin-bottom: 20px;">Update Google Drive links only if you need to replace existing files</p>
+                        <h3>📁 Update Files in Google Drive (Optional)</h3>
+                        <p style="color: #666; margin-bottom: 20px; text-align: center;">
+                            Select new files to replace existing ones in Google Drive
+                        </p>
                         <div class="file-upload-grid">
                             <div class="file-upload-item">
                                 <h4>Job Description</h4>
                                 <p>Current: <strong id="current-jd-link">Not available</strong></p>
-                                <p><strong>New Google Drive Link:</strong></p>
-                                <input type="url" id="update-jd-google-drive-link" placeholder="https://drive.google.com/file/d/..." style="width: 100%; margin-top: 10px;">
-                                <small style="color: #666; display: block; margin-top: 5px;">Leave empty to keep current link</small>
+                                <p>Upload new JD file to replace existing one</p>
+                                <p><strong>Accepted formats:</strong> PDF, PPT, PPTX</p>
+                                <input type="file" id="update-job-description" accept=".pdf,.ppt,.pptx">
+                                <div id="update-jd-upload-status" class="upload-status"></div>
                             </div>
                             <div class="file-upload-item">
                                 <h4>Student Database</h4>
                                 <p>Current: <strong id="current-db-link">Not available</strong></p>
-                                <p><strong>New Google Drive Link:</strong></p>
-                                <input type="url" id="update-db-google-drive-link" placeholder="https://drive.google.com/file/d/..." style="width: 100%; margin-top: 10px;">
-                                <small style="color: #666; display: block; margin-top: 5px;">Leave empty to keep current link</small>
+                                <p>Upload new database file to replace existing one</p>
+                                <p><strong>Accepted formats:</strong> XLS, XLSX</p>
+                                <input type="file" id="update-student-database" accept=".xls,.xlsx">
+                                <div id="update-db-upload-status" class="upload-status"></div>
                             </div>
                         </div>
                     </div>
@@ -578,11 +582,7 @@
             document.getElementById('update-final-database-date').value = project.finalDatabaseDate || '';
             document.getElementById('update-whatsapp-link').value = project.whatsappLink || '';
             
-            // Populate Google Drive links
-            document.getElementById('update-jd-google-drive-link').value = project.jobDescriptionDriveLink || '';
-            document.getElementById('update-db-google-drive-link').value = project.studentDatabaseDriveLink || '';
-            
-            // Show current links
+            // Show current file availability
             document.getElementById('current-jd-link').textContent = project.jobDescriptionDriveLink ? 'Available' : 'Not available';
             document.getElementById('current-db-link').textContent = project.studentDatabaseDriveLink ? 'Available' : 'Not available';
             
@@ -594,6 +594,31 @@
 
         async function updateProject() {
             const projectId = document.getElementById('project-id').value;
+            
+            // Get files for updates
+            const jobDescriptionFile = document.getElementById('update-job-description').files[0];
+            const studentDatabaseFile = document.getElementById('update-student-database').files[0];
+            
+            let jdUploadResult = null;
+            let dbUploadResult = null;
+            
+            // Upload new files to Google Drive if provided
+            try {
+                if (jobDescriptionFile) {
+                    document.getElementById('update-jd-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading new JD to Google Drive...</div>';
+                    jdUploadResult = await uploadFileToDrive(jobDescriptionFile, projectId, 'JD');
+                    document.getElementById('update-jd-upload-status').innerHTML = '<div class="upload-status success">✅ New JD uploaded successfully!</div>';
+                }
+                
+                if (studentDatabaseFile) {
+                    document.getElementById('update-db-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading new database to Google Drive...</div>';
+                    dbUploadResult = await uploadFileToDrive(studentDatabaseFile, projectId, 'DB');
+                    document.getElementById('update-db-upload-status').innerHTML = '<div class="upload-status success">✅ New database uploaded successfully!</div>';
+                }
+            } catch (error) {
+                alert(`❌ Error uploading files: ${error.message}`);
+                return;
+            }
             
             // Collect updated data
             const updatedData = {
@@ -617,17 +642,30 @@
                 finalDatabaseDate: document.getElementById('update-final-database-date').value,
                 whatsappLink: document.getElementById('update-whatsapp-link').value,
                 trainingRequest: document.querySelector('input[name="update-training-request"]:checked')?.value,
-                // Update Google Drive links only if new ones are provided
-                jobDescriptionDriveLink: document.getElementById('update-jd-google-drive-link').value || null,
-                studentDatabaseDriveLink: document.getElementById('update-db-google-drive-link').value || null,
                 lastUpdated: new Date().toISOString(),
                 status: 'updated'
             };
+
+            // Update file links if new files were uploaded
+            if (jdUploadResult) {
+                updatedData.jobDescriptionDriveLink = jdUploadResult.viewUrl;
+                updatedData.jobDescriptionDownloadLink = jdUploadResult.downloadUrl;
+            }
+            if (dbUploadResult) {
+                updatedData.studentDatabaseDriveLink = dbUploadResult.viewUrl;
+                updatedData.studentDatabaseDownloadLink = dbUploadResult.downloadUrl;
+            }
 
             const success = await updateProjectInFirebase(projectId, updatedData);
             if (success) {
                 document.getElementById('updateSuccessMessage').style.display = 'block';
                 document.getElementById('updateSuccessMessage').scrollIntoView({behavior: 'smooth'});
+                
+                // Clear upload status after successful update
+                setTimeout(() => {
+                    document.getElementById('update-jd-upload-status').innerHTML = '';
+                    document.getElementById('update-db-upload-status').innerHTML = '';
+                }, 3000);
             }
         }
 
