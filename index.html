@@ -8,6 +8,10 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Google Drive API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
 
     <script>
     // Firebase configuration
@@ -33,6 +37,92 @@
         console.log('✅ Firebase connected successfully!');
     }).catch((error) => {
         console.error('❌ Firebase connection failed:', error);
+    });
+
+    // Google Drive Configuration
+    const GOOGLE_DRIVE_CONFIG = {
+        apiKey: 'AIzaSyD64E4_bL3iQRvvzCmcMRg60jo4_dnY4cQ',
+        clientId: '1066525595980-7f1f1af20c16105eb96941fc9150fc23549a66e3.apps.googleusercontent.com',
+        scope: 'https://www.googleapis.com/auth/drive.file'
+    };
+
+    // Initialize Google Drive API
+    function initGoogleDrive() {
+        gapi.load('client:auth2', function() {
+            gapi.client.init({
+                apiKey: GOOGLE_DRIVE_CONFIG.apiKey,
+                clientId: GOOGLE_DRIVE_CONFIG.clientId,
+                scope: GOOGLE_DRIVE_CONFIG.scope
+            }).then(function() {
+                console.log('✅ Google Drive API initialized');
+            }).catch(function(error) {
+                console.error('❌ Google Drive API error:', error);
+            });
+        });
+    }
+
+    // Upload file to Google Drive
+    async function uploadFileToDrive(file, projectId, fileType) {
+        try {
+            // Authenticate user
+            const authResult = await gapi.auth2.getAuthInstance().signIn();
+            
+            // Create file metadata
+            const metadata = {
+                name: `${fileType}_${projectId}_${file.name}`,
+                parents: ['1QrCL8CFd9ysANELN6fBFtZjBYfnqsyze'], // Replace with your folder ID
+                mimeType: file.type
+            };
+
+            // Upload file
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
+            form.append('file', file);
+
+            const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authResult.getAuthResponse().access_token}`
+                },
+                body: form
+            });
+
+            const result = await response.json();
+            
+            // Make file publicly accessible
+            await makeFilePublic(result.id);
+            
+            return {
+                fileId: result.id,
+                downloadUrl: `https://drive.google.com/uc?id=${result.id}`,
+                viewUrl: `https://drive.google.com/file/d/${result.id}/view`
+            };
+        } catch (error) {
+            console.error('❌ Upload error:', error);
+            throw error;
+        }
+    }
+
+    // Make file publicly accessible
+    async function makeFilePublic(fileId) {
+        const authResult = await gapi.auth2.getAuthInstance().signIn();
+        
+        await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${authResult.getAuthResponse().access_token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                role: 'reader',
+                type: 'anyone'
+            })
+        });
+    }
+
+    // Initialize Google Drive on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        initGoogleDrive();
     });
     </script>
 
@@ -183,38 +273,26 @@
                         </div>
                     </div>
 
-                    <!-- Google Drive Links Section -->
+                    <!-- Google Drive API Upload Section -->
                     <div class="file-upload-section">
-                        <h3>📁 Google Drive File Links</h3>
+                        <h3>📁 Upload Files to Google Drive</h3>
                         <p style="color: #666; margin-bottom: 20px; text-align: center;">
-                            Upload your files to Google Drive and paste the sharing links below
+                            Select files to upload directly to Google Drive
                         </p>
                         <div class="file-upload-grid">
                             <div class="file-upload-item">
                                 <h4>Job Description</h4>
-                                <p>Upload JD to Google Drive and paste the sharing link</p>
-                                <p><strong>Steps:</strong></p>
-                                <ol style="text-align: left; margin: 10px 0; padding-left: 20px;">
-                                    <li>Upload JD file to Google Drive</li>
-                                    <li>Right-click file → "Share"</li>
-                                    <li>Set to "Anyone with link can view"</li>
-                                    <li>Copy the link and paste below</li>
-                                </ol>
-                                <input type="url" id="jd-google-drive-link" placeholder="https://drive.google.com/file/d/..." style="width: 100%; margin-top: 10px;">
-                                <small style="color: #666; display: block; margin-top: 5px;">Example: https://drive.google.com/file/d/1ABC123.../view</small>
+                                <p>Upload the official JD from company</p>
+                                <p><strong>Accepted formats:</strong> PDF, PPT, PPTX</p>
+                                <input type="file" id="job-description" accept=".pdf,.ppt,.pptx">
+                                <div id="jd-upload-status" class="upload-status"></div>
                             </div>
                             <div class="file-upload-item">
                                 <h4>Student Database</h4>
-                                <p>Upload database to Google Drive and paste the sharing link</p>
-                                <p><strong>Steps:</strong></p>
-                                <ol style="text-align: left; margin: 10px 0; padding-left: 20px;">
-                                    <li>Upload Excel file to Google Drive</li>
-                                    <li>Right-click file → "Share"</li>
-                                    <li>Set to "Anyone with link can view"</li>
-                                    <li>Copy the link and paste below</li>
-                                </ol>
-                                <input type="url" id="db-google-drive-link" placeholder="https://drive.google.com/file/d/..." style="width: 100%; margin-top: 10px;">
-                                <small style="color: #666; display: block; margin-top: 5px;">Example: https://drive.google.com/file/d/1XYZ789.../view</small>
+                                <p>Excel file with student details</p>
+                                <p><strong>Accepted formats:</strong> XLS, XLSX</p>
+                                <input type="file" id="student-database" accept=".xls,.xlsx">
+                                <div id="db-upload-status" class="upload-status"></div>
                             </div>
                         </div>
                     </div>
@@ -595,20 +673,52 @@
                 finalDatabaseDate: document.getElementById('final-database-date').value,
                 whatsappLink: document.getElementById('whatsapp-link').value,
                 trainingRequest: document.querySelector('input[name="training-request"]:checked')?.value,
-                // Google Drive links
-                jobDescriptionDriveLink: document.getElementById('jd-google-drive-link').value,
-                studentDatabaseDriveLink: document.getElementById('db-google-drive-link').value,
                 createdAt: new Date().toISOString(),
                 status: 'new'
             };
         }
 
-        // Handle form submission
+        // Handle form submission with file uploads
         document.getElementById('createProjectForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Collect form data
+            const projectId = generateProjectId();
+            
+            // Get files
+            const jobDescriptionFile = document.getElementById('job-description').files[0];
+            const studentDatabaseFile = document.getElementById('student-database').files[0];
+            
+            let jdUploadResult = null;
+            let dbUploadResult = null;
+            
+            // Upload files to Google Drive
+            try {
+                if (jobDescriptionFile) {
+                    document.getElementById('jd-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading JD to Google Drive...</div>';
+                    jdUploadResult = await uploadFileToDrive(jobDescriptionFile, projectId, 'JD');
+                    document.getElementById('jd-upload-status').innerHTML = '<div class="upload-status success">✅ JD uploaded successfully!</div>';
+                }
+                
+                if (studentDatabaseFile) {
+                    document.getElementById('db-upload-status').innerHTML = '<div class="upload-status progress">📤 Uploading database to Google Drive...</div>';
+                    dbUploadResult = await uploadFileToDrive(studentDatabaseFile, projectId, 'DB');
+                    document.getElementById('db-upload-status').innerHTML = '<div class="upload-status success">✅ Database uploaded successfully!</div>';
+                }
+            } catch (error) {
+                alert(`❌ Error uploading files: ${error.message}`);
+                return;
+            }
+            
+            // Collect form data with file URLs
             const projectData = collectFormData();
+            if (jdUploadResult) {
+                projectData.jobDescriptionDriveLink = jdUploadResult.viewUrl;
+                projectData.jobDescriptionDownloadLink = jdUploadResult.downloadUrl;
+            }
+            if (dbUploadResult) {
+                projectData.studentDatabaseDriveLink = dbUploadResult.viewUrl;
+                projectData.studentDatabaseDownloadLink = dbUploadResult.downloadUrl;
+            }
             
             // Save to Firebase
             const success = await saveProjectToFirebase(projectData);
@@ -623,6 +733,10 @@
                 
                 // Reset form
                 this.reset();
+                
+                // Clear upload status
+                document.getElementById('jd-upload-status').innerHTML = '';
+                document.getElementById('db-upload-status').innerHTML = '';
             } else {
                 alert('❌ Error creating project. Please try again.');
             }
