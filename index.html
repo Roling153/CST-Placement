@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team A - Sourcing Portal | CST</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyD64E4_bL3iQRvvzCmcMRg60jo4_dnY4cQ",
+        authDomain: "cst-portal-db.firebaseapp.com",
+        projectId: "cst-portal-db",
+        storageBucket: "cst-portal-db.firebasestorage.app",
+        messagingSenderId: "1066525595980",
+        appId: "1:1066525595980:web:7e574f1bd9524310b197e9",
+        measurementId: "G-H78G7HJR28"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Test Firebase connection
+    db.collection('test').add({
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        message: 'Firebase connected successfully!'
+    }).then(() => {
+        console.log('✅ Firebase connected successfully!');
+    }).catch((error) => {
+        console.error('❌ Firebase connection failed:', error);
+    });
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            color: #667eea;
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        /* Navigation */
+        .nav-section {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #555;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        /* Content Sections */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .form-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 35px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .section-title {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            font-weight: 600;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 14px 16px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Radio and Checkbox Styles */
+        .radio-group, .checkbox-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .radio-item, .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-item input, .checkbox-item input {
+            width: auto;
+            margin: 0;
+        }
+
+        /* File Upload Section */
+        .file-upload-section {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%);
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .file-upload-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .file-upload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        .file-upload-item {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #e1e8ed;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .file-upload-item h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .file-upload-item p {
+            font-size: 0.9em;
+            color: #666;
+            margin: 8px 0 15px 0;
+        }
+
+        .file-upload-item input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-item input[type="file"]:hover {
+            border-color: #667eea;
+            background: #f0f8ff;
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 6px 20px rgba(116, 185, 255, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 6px 20px rgba(0, 184, 148, 0.4);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 35px;
+            flex-wrap: wrap;
+        }
+
+        /* Update Section */
+        .update-section {
+            background: linear-gradient(135deg, #fff8e8 0%, #ffe8cc 100%);
+            border: 2px solid #fdcb6e;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .update-section h3 {
+            color: #e17055;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .project-id-input {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Success Message */
+        .success-message {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            border: 2px solid #00b894;
+            color: #00a085;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        /* Instructions */
+        .instructions {
+            background: #f0f8ff;
+            border-left: 4px solid #74b9ff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 10px 10px 0;
+        }
+
+        .instructions h4 {
+            color: #0984e3;
+            margin-bottom: 10px;
+        }
+
+        .instructions ul {
+            margin-left: 20px;
+            color: #666;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        /* Project ID Display */
+        .project-id-display {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4edda 100%);
+            border: 2px solid #00b894;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .project-id-display h3 {
+            color: #00a085;
+            margin-bottom: 10px;
+        }
+
+        .project-id-code {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            margin: 10px 0;
+            border: 2px solid #00b894;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .header .subtitle {
+                font-size: 1.1em;
+            }
+
+            .nav-section {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .nav-btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .file-upload-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>CST Portal</h1>
+            <div class="subtitle">Team A - Placement Teams</div>
+            <p>Submit and manage company recruitment opportunities</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-section">
+            <button class="nav-btn active" onclick="showSection('create')">📝 Create New Project</button>
+            <button class="nav-btn" onclick="showSection('update')">🔄 Update Existing Project</button>
+        </div>
+
+        <!-- Create New Project Section -->
+        <div id="create" class="content-section active">
+            <div class="form-container">
+                <h2 class="section-title">📋 Create New CST</h2>
+                
+                <div class="instructions">
+                    <h4>📌 Instructions:</h4>
+                    <ul>
+                        <li>Fill in all required fields marked with <span class="required">*</span></li>
+                        <li>Upload job description (PDF/PPT format only)</li>
+                        <li>Upload eligible students database (Excel format only)</li>
+                        <li>System will auto-generate a unique Project ID upon submission</li>
+                    </ul>
+                </div>
+
+                <form id="createProjectForm">
+                    <!-- Company & Role Information -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="company-name">Company Name <span class="required">*</span></label>
+                            <input type="text" id="company-name" placeholder="e.g., Acme Corporation" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="role-title">Role/Position <span class="required">*</span></label>
+                            <input type="text" id="role-title" placeholder="e.g., Software Developer" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ctc">CTC (in LPA) <span class="required">*</span></label>
+                            <input type="number" id="ctc" step="0.1" placeholder="e.g., 6.5" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Job Location</label>
+                            <input type="text" id="location" placeholder="e.g., Bangalore, Chennai">
+                        </div>
+                    </div>
+
+                    <!-- Drive Logistics -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="drive-date">Drive Date <span class="required">*</span></label>
+                            <input type="date" id="drive-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="drive-mode">Drive Mode <span class="required">*</span></label>
+                            <select id="drive-mode" required>
+                                <option value="">Select Mode</option>
+                                <option value="virtual">Virtual</option>
+                                <option value="physical">Physical</option>
+                                <option value="hybrid">Hybrid</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="drive-status">Drive Status <span class="required">*</span></label>
+                            <select id="drive-status" required>
+                                <option value="">Select Status</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="tentative">Tentative</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-person">Company Contact Person</label>
+                            <input type="text" id="contact-person" placeholder="e.g., John Doe, HR Manager">
+                        </div>
+                    </div>
+
+                    <!-- Interview Rounds -->
+                    <div class="form-group">
+                        <label for="interview-rounds">Interview Rounds Details</label>
+                        <textarea id="interview-rounds" placeholder="Describe the interview process, rounds, and evaluation criteria"></textarea>
+                    </div>
+
+                    <!-- Eligibility Criteria -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="eligible-departments">Eligible Departments <span class="required">*</span></label>
+                            <input type="text" id="eligible-departments" placeholder="e.g., CSE, IT, ECE" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="min-cgpa">Minimum CGPA</label>
+                            <input type="number" id="min-cgpa" step="0.1" min="0" max="10" placeholder="e.g., 7.0">
+                        </div>
+                        <div class="form-group">
+                            <label for="passing-year">Eligible Passing Year</label>
+                            <input type="text" id="passing-year" placeholder="e.g., 2025, 2026">
+                        </div>
+                        <div class="form-group">
+                            <label for="bond-duration">Bond Duration (if any)</label>
+                            <input type="text" id="bond-duration" placeholder="e.g., 2 years, No bond">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="additional-criteria">Additional Eligibility Criteria</label>
+                        <textarea id="additional-criteria" placeholder="Any specific requirements, technical skills, certifications, etc."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="job-description-text">Job Description Summary</label>
+                        <textarea id="job-description-text" placeholder="Brief overview of the role, responsibilities, and requirements"></textarea>
+                    </div>
+
+                    <!-- Student Information -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="students-opted">Number of Students Opted</label>
+                            <input type="number" id="students-opted" placeholder="e.g., 45">
+                        </div>
+                        <div class="form-group">
+                            <label for="final-database-date">Final Date for Updated Database</label>
+                            <input type="date" id="final-database-date">
+                        </div>
+                        <div class="form-group">
+                            <label for="whatsapp-link">Students WhatsApp Group Link</label>
+                            <input type="url" id="whatsapp-link" placeholder="https://chat.whatsapp.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label>Training Request Confirmation</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="training-yes" name="training-request" value="yes">
+                                    <label for="training-yes">Yes</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="training-no" name="training-request" value="no">
+                                    <label for="training-no">No</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Upload Section -->
+                    <div class="file-upload-section">
+                        <h3>📁 Document Uploads</h3>
+                        <div class="file-upload-grid">
+                            <div class="file-upload-item">
+                                <h4>Job Description</h4>
+                                <p>Upload the official JD from company</p>
+                                <p><strong>Accepted formats:</strong> PDF, PPT, PPTX</p>
+                                <input type="file" id="job-description" accept=".pdf,.ppt,.pptx">
+                            </div>
+                            <div class="file-upload-item">
+                                <h4>Eligible Students Database</h4>
+                                <p>Excel file with student details</p>
+                                <p><strong>Accepted formats:</strong> XLS, XLSX</p>
+                                <input type="file" id="student-database" accept=".xls,.xlsx">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn">🚀 Create Project</button>
+                        <button type="button" class="btn btn-secondary" onclick="saveAsDraft()">💾 Save as Draft</button>
+                    </div>
+                </form>
+
+                <div class="project-id-display" id="projectIdDisplay">
+                    <h3>✅ CST Created Successfully!</h3>
+                    <p>Your project has been submitted to Team B. Here's your Project ID:</p>
+                    <div class="project-id-code" id="generatedProjectId">CST-2024-016</div>
+                    <p>Please save this ID for future reference and updates.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Existing Project Section -->
+        <div id="update" class="content-section">
+            <div class="form-container">
+                <div class="update-section">
+                    <h3>🔄 Update Existing CST</h3>
+                    <p style="margin-bottom: 20px; color: #666;">Enter the Project ID to load and modify existing project details.</p>
+                    
+                    <div class="project-id-input">
+                        <div class="form-group">
+                            <label for="project-id">Project ID <span class="required">*</span></label>
+                            <input type="text" id="project-id" placeholder="Enter Project ID (e.g., CST-2024-001)" required>
+                        </div>
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button class="btn btn-success" onclick="loadProject()">🔍 Load Project</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loaded Project Form (Initially Hidden) -->
+                <div id="loadedProjectForm" style="display: none;">
+                    <h2 class="section-title">📝 Update Project Details</h2>
+                    
+                    <div class="success-message" id="updateSuccessMessage">
+                        ✅ CST updated successfully! Team B has been notified of the changes.
+                    </div>
+
+                    <!-- Same form structure as create, but with pre-filled values -->
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="update-company-name">Company Name <span class="required">*</span></label>
+                            <input type="text" id="update-company-name" value="TechCorp Solutions" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="update-role-title">Role/Position <span class="required">*</span></label>
+                            <input type="text" id="update-role-title" value="Full Stack Developer" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="update-ctc">CTC (in LPA) <span class="required">*</span></label>
+                            <input type="number" id="update-ctc" value="8.5" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="update-location">Job Location</label>
+                            <input type="text" id="update-location" value="Bangalore">
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="update-drive-date">Drive Date <span class="required">*</span></label>
+                            <input type="date" id="update-drive-date" value="2025-08-15" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="update-drive-mode">Drive Mode <span class="required">*</span></label>
+                            <select id="update-drive-mode" required>
+                                <option value="virtual" selected>Virtual</option>
+                                <option value="physical">Physical</option>
+                                <option value="hybrid">Hybrid</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="update-drive-status">Drive Status <span class="required">*</span></label>
+                            <select id="update-drive-status" required>
+                                <option value="confirmed" selected>Confirmed</option>
+                                <option value="tentative">Tentative</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="update-contact-person">Company Contact Person</label>
+                            <input type="text" id="update-contact-person" value="Sarah Johnson, Talent Acquisition">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="update-interview-rounds">Interview Rounds Details</label>
+                        <textarea id="update-interview-rounds">Technical Round 1: Coding + DSA, Technical Round 2: System Design, HR Round: Final Interview</textarea>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="update-eligible-departments">Eligible Departments <span class="required">*</span></label>
+                            <input type="text" id="update-eligible-departments" value="CSE, IT, ECE" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="update-min-cgpa">Minimum CGPA</label>
+                            <input type="number" id="update-min-cgpa" value="7.0" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label for="update-passing-year">Eligible Passing Year</label>
+                            <input type="text" id="update-passing-year" value="2025">
+                        </div>
+                        <div class="form-group">
+                            <label for="update-bond-duration">Bond Duration (if any)</label>
+                            <input type="text" id="update-bond-duration" value="2 years">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="update-additional-criteria">Additional Eligibility Criteria</label>
+                        <textarea id="update-additional-criteria">Strong experience in React.js, Node.js, and MongoDB. Knowledge of cloud platforms preferred.</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="update-job-description-text">Job Description Summary</label>
+                        <textarea id="update-job-description-text">Full Stack Developer role focusing on modern web technologies and cloud deployment.</textarea>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="update-students-opted">Number of Students Opted</label>
+                            <input type="number" id="update-students-opted" value="45">
+                        </div>
+                        <div class="form-group">
+                            <label for="update-final-database-date">Final Date for Updated Database</label>
+                            <input type="date" id="update-final-database-date" value="2025-07-30">
+                        </div>
+                        <div class="form-group">
+                            <label for="update-whatsapp-link">Students WhatsApp Group Link</label>
+                            <input type="url" id="update-whatsapp-link" value="https://chat.whatsapp.com/example">
+                        </div>
+                        <div class="form-group">
+                            <label>Training Request Confirmation</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="update-training-yes" name="update-training-request" value="yes" checked>
+                                    <label for="update-training-yes">Yes</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="update-training-no" name="update-training-request" value="no">
+                                    <label for="update-training-no">No</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Re-upload Section -->
+                    <div class="file-upload-section">
+                        <h3>📁 Update Documents (Optional)</h3>
+                        <p style="color: #666; margin-bottom: 20px;">Upload new files only if you need to replace existing documents</p>
+                        <div class="file-upload-grid">
+                            <div class="file-upload-item">
+                                <h4>Job Description</h4>
+                                <p>Current: <strong>JD_TechCorp_FullStack.pdf</strong></p>
+                                <p><strong>Upload new:</strong> PDF, PPT, PPTX</p>
+                                <input type="file" id="update-job-description" accept=".pdf,.ppt,.pptx">
+                            </div>
+                            <div class="file-upload-item">
+                                <h4>Eligible Students Database</h4>
+                                <p>Current: <strong>Students_TechCorp_Aug2025.xlsx</strong></p>
+                                <p><strong>Upload new:</strong> XLS, XLSX</p>
+                                <input type="file" id="update-student-database" accept=".xls,.xlsx">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn" onclick="updateProject()">✅ Update Project</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelUpdate()">❌ Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase functions
+        async function saveProjectToFirebase(projectData) {
+            try {
+                await db.collection('projects').doc(projectData.projectId).set(projectData);
+                console.log('✅ Project saved to Firebase:', projectData.projectId);
+                return true;
+            } catch (error) {
+                console.error('❌ Error saving to Firebase:', error);
+                return false;
+            }
+        }
+
+        async function loadProjectFromFirebase(projectId) {
+            try {
+                const doc = await db.collection('projects').doc(projectId).get();
+                if (doc.exists) {
+                    return doc.data();
+                } else {
+                    return null;
+                }
+            } catch (error) {
+                console.error('❌ Error loading from Firebase:', error);
+                return null;
+            }
+        }
+
+        async function updateProjectInFirebase(projectId, updatedData) {
+            try {
+                await db.collection('projects').doc(projectId).update(updatedData);
+                console.log('✅ Project updated in Firebase:', projectId);
+                return true;
+            } catch (error) {
+                console.error('❌ Error updating in Firebase:', error);
+                return false;
+            }
+        }
+
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        function generateProjectId() {
+            const currentYear = new Date().getFullYear();
+            const randomNum = Math.floor(Math.random() * 1000) + 1;
+            return `CST-${currentYear}-${randomNum.toString().padStart(3, '0')}`;
+        }
+
+        async function loadProject() {
+            const projectId = document.getElementById('project-id').value;
+            if (projectId) {
+                const project = await loadProjectFromFirebase(projectId);
+                
+                if (project) {
+                    // Populate form with project data
+                    populateUpdateForm(project);
+                    document.getElementById('loadedProjectForm').style.display = 'block';
+                    document.getElementById('updateSuccessMessage').style.display = 'none';
+                } else {
+                    alert('Project not found. Please check the Project ID.');
+                }
+            } else {
+                alert('Please enter a Project ID.');
+            }
+        }
+
+        function populateUpdateForm(project) {
+            // Populate all update form fields with project data
+            document.getElementById('update-company-name').value = project.companyName || '';
+            document.getElementById('update-role-title').value = project.roleTitle || '';
+            document.getElementById('update-ctc').value = project.ctc || '';
+            document.getElementById('update-location').value = project.location || '';
+            document.getElementById('update-drive-date').value = project.driveDate || '';
+            document.getElementById('update-drive-mode').value = project.driveMode || '';
+            document.getElementById('update-drive-status').value = project.driveStatus || '';
+            document.getElementById('update-contact-person').value = project.contactPerson || '';
+            document.getElementById('update-interview-rounds').value = project.interviewRounds || '';
+            document.getElementById('update-eligible-departments').value = project.eligibleDepartments || '';
+            document.getElementById('update-min-cgpa').value = project.minCgpa || '';
+            document.getElementById('update-passing-year').value = project.passingYear || '';
+            document.getElementById('update-bond-duration').value = project.bondDuration || '';
+            document.getElementById('update-additional-criteria').value = project.additionalCriteria || '';
+            document.getElementById('update-job-description-text').value = project.jobDescriptionText || '';
+            document.getElementById('update-students-opted').value = project.studentsOpted || '';
+            document.getElementById('update-final-database-date').value = project.finalDatabaseDate || '';
+            document.getElementById('update-whatsapp-link').value = project.whatsappLink || '';
+            
+            // Set radio button
+            if (project.trainingRequest) {
+                document.getElementById(`update-training-${project.trainingRequest}`).checked = true;
+            }
+        }
+
+        async function updateProject() {
+            const projectId = document.getElementById('project-id').value;
+            
+            // Collect updated data
+            const updatedData = {
+                projectId: projectId,
+                companyName: document.getElementById('update-company-name').value,
+                roleTitle: document.getElementById('update-role-title').value,
+                ctc: document.getElementById('update-ctc').value,
+                location: document.getElementById('update-location').value,
+                driveDate: document.getElementById('update-drive-date').value,
+                driveMode: document.getElementById('update-drive-mode').value,
+                driveStatus: document.getElementById('update-drive-status').value,
+                contactPerson: document.getElementById('update-contact-person').value,
+                interviewRounds: document.getElementById('update-interview-rounds').value,
+                eligibleDepartments: document.getElementById('update-eligible-departments').value,
+                minCgpa: document.getElementById('update-min-cgpa').value,
+                passingYear: document.getElementById('update-passing-year').value,
+                bondDuration: document.getElementById('update-bond-duration').value,
+                additionalCriteria: document.getElementById('update-additional-criteria').value,
+                jobDescriptionText: document.getElementById('update-job-description-text').value,
+                studentsOpted: document.getElementById('update-students-opted').value,
+                finalDatabaseDate: document.getElementById('update-final-database-date').value,
+                whatsappLink: document.getElementById('update-whatsapp-link').value,
+                trainingRequest: document.querySelector('input[name="update-training-request"]:checked')?.value,
+                lastUpdated: new Date().toISOString(),
+                status: 'updated'
+            };
+
+            const success = await updateProjectInFirebase(projectId, updatedData);
+            if (success) {
+                document.getElementById('updateSuccessMessage').style.display = 'block';
+                document.getElementById('updateSuccessMessage').scrollIntoView({behavior: 'smooth'});
+            }
+        }
+
+        function cancelUpdate() {
+            document.getElementById('loadedProjectForm').style.display = 'none';
+            document.getElementById('project-id').value = '';
+        }
+
+        async function saveAsDraft() {
+            // Collect form data
+            const formData = collectFormData();
+            formData.status = 'draft';
+            formData.createdAt = new Date().toISOString();
+            
+            // Save to Firebase
+            const success = await saveProjectToFirebase(formData);
+            if (success) {
+                alert('✅ Draft saved successfully to Firebase!');
+            } else {
+                alert('❌ Error saving draft. Please try again.');
+            }
+        }
+
+        function collectFormData() {
+            return {
+                projectId: generateProjectId(),
+                companyName: document.getElementById('company-name').value,
+                roleTitle: document.getElementById('role-title').value,
+                ctc: document.getElementById('ctc').value,
+                location: document.getElementById('location').value,
+                driveDate: document.getElementById('drive-date').value,
+                driveMode: document.getElementById('drive-mode').value,
+                driveStatus: document.getElementById('drive-status').value,
+                contactPerson: document.getElementById('contact-person').value,
+                interviewRounds: document.getElementById('interview-rounds').value,
+                eligibleDepartments: document.getElementById('eligible-departments').value,
+                minCgpa: document.getElementById('min-cgpa').value,
+                passingYear: document.getElementById('passing-year').value,
+                bondDuration: document.getElementById('bond-duration').value,
+                additionalCriteria: document.getElementById('additional-criteria').value,
+                jobDescriptionText: document.getElementById('job-description-text').value,
+                studentsOpted: document.getElementById('students-opted').value,
+                finalDatabaseDate: document.getElementById('final-database-date').value,
+                whatsappLink: document.getElementById('whatsapp-link').value,
+                trainingRequest: document.querySelector('input[name="training-request"]:checked')?.value,
+                createdAt: new Date().toISOString(),
+                status: 'new'
+            };
+        }
+
+        // Handle form submission
+        document.getElementById('createProjectForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Collect form data
+            const projectData = collectFormData();
+            
+            // Save to Firebase
+            const success = await saveProjectToFirebase(projectData);
+            
+            if (success) {
+                // Display success message
+                document.getElementById('generatedProjectId').textContent = projectData.projectId;
+                document.getElementById('projectIdDisplay').style.display = 'block';
+                
+                // Scroll to success message
+                document.getElementById('projectIdDisplay').scrollIntoView({behavior: 'smooth'});
+                
+                // Reset form
+                this.reset();
+            } else {
+                alert('❌ Error creating project. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>
